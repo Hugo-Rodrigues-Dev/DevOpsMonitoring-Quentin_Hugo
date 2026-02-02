@@ -15,6 +15,8 @@ public interface QuestRepository extends JpaRepository<Quest, String> {
 
 	java.util.List<Quest> findByStatusNot(QuestStatus status, org.springframework.data.domain.Sort sort);
 
+	java.util.List<Quest> findByStatus(QuestStatus status, org.springframework.data.domain.Sort sort);
+
 	@Modifying
 	@Transactional
 	@Query("update Quest q set q.status = :status, q.resolvedAt = null, q.lastError = null "

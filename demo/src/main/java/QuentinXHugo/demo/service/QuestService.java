@@ -7,6 +7,8 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
@@ -30,14 +32,16 @@ public class QuestService {
 	private final ProfessorProperties properties;
 	private final TaskScheduler taskScheduler;
 	private final QuestMapper questMapper;
+	private final Environment environment;
 
 	public QuestService(QuestRepository repository, ProfessorClient professorClient, ProfessorProperties properties,
-		TaskScheduler taskScheduler, QuestMapper questMapper) {
+		TaskScheduler taskScheduler, QuestMapper questMapper, Environment environment) {
 		this.repository = repository;
 		this.professorClient = professorClient;
 		this.properties = properties;
 		this.taskScheduler = taskScheduler;
 		this.questMapper = questMapper;
+		this.environment = environment;
 	}
 
 	public Optional<Quest> saveIfNeeded(QuestPayload payload) {
@@ -73,7 +77,14 @@ public class QuestService {
 	}
 
 	public List<Quest> listAll() {
-		return repository.findByStatusNot(QuestStatus.RESOLVED, Sort.by(Sort.Direction.DESC, "receivedAt"));
+		Sort sort = Sort.by(Sort.Direction.DESC, "receivedAt");
+		if (environment.acceptsProfiles(Profiles.of("ihm"))) {
+			return repository.findByStatus(QuestStatus.RECEIVED, sort);
+		}
+		if (environment.acceptsProfiles(Profiles.of("auto"))) {
+			return repository.findByStatus(QuestStatus.PROCESSING, sort);
+		}
+		return repository.findByStatusNot(QuestStatus.RESOLVED, sort);
 	}
 
 	public Optional<Quest> findById(String id) {
@@ -91,18 +102,29 @@ public class QuestService {
 			log.info("Quest {} already processing or resolved, skipping scheduling", quest.getId());
 			return;
 		}
-		Duration safeWait = waitDuration != null ? waitDuration : properties.getProcessingDelay();
-		if (safeWait.isNegative()) {
-			safeWait = Duration.ZERO;
+		scheduleResolution(quest.getId(), waitDuration);
+	}
+
+	public void rescheduleProcessing(Quest quest) {
+		if (quest == null) {
+			return;
 		}
-		Instant scheduledAt = Instant.now().plus(safeWait);
-		taskScheduler.schedule(() -> resolveQuest(quest.getId()), scheduledAt);
-		log.info("Quest {} scheduled for resolution at {}", quest.getId(), scheduledAt);
+		scheduleResolution(quest.getId(), Duration.ZERO);
 	}
 
 	protected boolean tryMarkProcessing(String questId) {
 		int updated = repository.markProcessingIfIdle(questId, QuestStatus.PROCESSING, QuestStatus.PROCESSING, QuestStatus.RESOLVED);
 		return updated > 0;
+	}
+
+	private void scheduleResolution(String questId, Duration waitDuration) {
+		Duration safeWait = waitDuration != null ? waitDuration : properties.getProcessingDelay();
+		if (safeWait.isNegative()) {
+			safeWait = Duration.ZERO;
+		}
+		Instant scheduledAt = Instant.now().plus(safeWait);
+		taskScheduler.schedule(() -> resolveQuest(questId), scheduledAt);
+		log.info("Quest {} scheduled for resolution at {}", questId, scheduledAt);
 	}
 
 	protected void resolveQuest(String questId) {
