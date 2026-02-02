@@ -1,0 +1,176 @@
+package QuentinXHugo.demo.model;
+
+import java.time.Duration;
+import java.time.Instant;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "quests")
+public class Quest {
+
+	@Id
+	private String id;
+
+	private String kind;
+	private String titre;
+	private String description;
+	private String lieu;
+	private String ennemi;
+	private String priorite;
+	private String recompense;
+	private Duration dureeEstimee;
+	private Instant delaiLimite;
+	private Double latitude;
+	private Double longitude;
+
+	@Enumerated(EnumType.STRING)
+	private QuestStatus status = QuestStatus.RECEIVED;
+
+	private Instant receivedAt;
+	private Instant resolvedAt;
+
+	@Column(length = 1024)
+	private String lastError;
+
+	@PrePersist
+	public void setReceivedAt() {
+		if (receivedAt == null) {
+			receivedAt = Instant.now();
+		}
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public String getKind() {
+		return kind;
+	}
+
+	public void setKind(String kind) {
+		this.kind = kind;
+	}
+
+	public String getTitre() {
+		return titre;
+	}
+
+	public void setTitre(String titre) {
+		this.titre = titre;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public String getLieu() {
+		return lieu;
+	}
+
+	public void setLieu(String lieu) {
+		this.lieu = lieu;
+	}
+
+	public String getEnnemi() {
+		return ennemi;
+	}
+
+	public void setEnnemi(String ennemi) {
+		this.ennemi = ennemi;
+	}
+
+	public String getPriorite() {
+		return priorite;
+	}
+
+	public void setPriorite(String priorite) {
+		this.priorite = priorite;
+	}
+
+	public String getRecompense() {
+		return recompense;
+	}
+
+	public void setRecompense(String recompense) {
+		this.recompense = recompense;
+	}
+
+	public Duration getDureeEstimee() {
+		return dureeEstimee;
+	}
+
+	public void setDureeEstimee(Duration dureeEstimee) {
+		this.dureeEstimee = dureeEstimee;
+	}
+
+	public Instant getDelaiLimite() {
+		return delaiLimite;
+	}
+
+	public void setDelaiLimite(Instant delaiLimite) {
+		this.delaiLimite = delaiLimite;
+	}
+
+	public Double getLatitude() {
+		return latitude;
+	}
+
+	public void setLatitude(Double latitude) {
+		this.latitude = latitude;
+	}
+
+	public Double getLongitude() {
+		return longitude;
+	}
+
+	public void setLongitude(Double longitude) {
+		this.longitude = longitude;
+	}
+
+	public QuestStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(QuestStatus status) {
+		this.status = status;
+	}
+
+	public Instant getReceivedAt() {
+		return receivedAt;
+	}
+
+	public void setReceivedAt(Instant receivedAt) {
+		this.receivedAt = receivedAt;
+	}
+
+	public Instant getResolvedAt() {
+		return resolvedAt;
+	}
+
+	public void setResolvedAt(Instant resolvedAt) {
+		this.resolvedAt = resolvedAt;
+	}
+
+	public String getLastError() {
+		return lastError;
+	}
+
+	public void setLastError(String lastError) {
+		this.lastError = lastError;
+	}
+}

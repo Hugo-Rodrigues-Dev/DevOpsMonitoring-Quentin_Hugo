@@ -1,9 +1,18 @@
 spring:
   application:
     name: QuentinXHugo
+  jpa:
+    hibernate:
+      ddl-auto: update
 
 royaume:
   ihm:
     group: observabilia
-    fake-api: true
+    fake-api: false
     url: http://localhost:8080
+  professor:
+    base-url: https://royaume.devonn.io
+    group: observabilia
+    fetch-delay: 15s
+    processing-delay: 5s
+    enabled: true
