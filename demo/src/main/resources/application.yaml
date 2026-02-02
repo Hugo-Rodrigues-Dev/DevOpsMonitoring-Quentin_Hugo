@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: QuentinXHugo
+
+royaume:
+  ihm:
+    group: observabilia
+    fake-api: true
+    url: http://localhost:8080

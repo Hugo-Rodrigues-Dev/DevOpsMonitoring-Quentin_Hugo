@@ -1,0 +1,11 @@
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+    <servers>
+        <server>
+            <id>devonn-registry</id>
+            <username>Reader</username>
+            <password>6fe0e27db64c949f1d44a7803cd128f1d3807b2d</password>
+        </server>
+    </servers>
+</settings>
