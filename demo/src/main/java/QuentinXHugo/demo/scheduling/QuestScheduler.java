@@ -31,9 +31,6 @@ public class QuestScheduler {
 
 	@Scheduled(fixedDelayString = "${royaume.professor.fetch-delay:60000}", initialDelayString = "2000")
 	public void fetchAndScheduleResolution() {
-		if (!properties.isEnabled()) {
-			return;
-		}
 		Optional<QuestPayload> payloadOpt = professorClient.fetchQuest();
 		if (payloadOpt.isEmpty()) {
 			return;
@@ -41,6 +38,10 @@ public class QuestScheduler {
 
 		QuestPayload payload = payloadOpt.get();
 		questService.saveIfNeeded(payload).ifPresent(quest -> {
+			if (!properties.isEnabled()) {
+				log.info("Quest {} saved (auto-resolve disabled)", quest.getId());
+				return;
+			}
 			Duration wait = questService.computeWaitDuration(payload);
 			log.info("Scheduling quest {} resolution in {}", quest.getId(), wait);
 			questService.processQuestAsync(quest, wait);

@@ -29,9 +29,6 @@ public class ProfessorClient {
 	}
 
 	public Optional<QuestPayload> fetchQuest() {
-		if (!properties.isEnabled()) {
-			return Optional.empty();
-		}
 		URI uri = UriComponentsBuilder.fromUriString(properties.getBaseUrl())
 			.path("/api/quests")
 			.queryParam("group", properties.getGroup())
@@ -62,9 +59,25 @@ public class ProfessorClient {
 			.toUri();
 		try {
 			ResponseEntity<ProfessorQuestResponse> response = restTemplate.postForEntity(uri, null, ProfessorQuestResponse.class);
-			boolean ok = response.getStatusCode().is2xxSuccessful();
-			log.info("Quest {} resolution call returned status {}", questId, response.getStatusCode());
-			return ok;
+			if (!response.getStatusCode().is2xxSuccessful()) {
+				log.warn("Quest {} resolution call returned status {}", questId, response.getStatusCode());
+				return false;
+			}
+			ProfessorQuestResponse body = response.getBody();
+			if (body == null) {
+				log.warn("Quest {} resolution response missing body", questId);
+				return false;
+			}
+			if (!Boolean.TRUE.equals(body.getOk())) {
+				log.warn("Quest {} resolution failed: codeRetour={} error={}", questId, body.getCodeRetour(), body.getErrorMessage());
+				return false;
+			}
+			if (body.getCodeRetour() != null && !"OK".equalsIgnoreCase(body.getCodeRetour())) {
+				log.warn("Quest {} resolution returned non-OK codeRetour={}", questId, body.getCodeRetour());
+				return false;
+			}
+			log.info("Quest {} resolved successfully", questId);
+			return true;
 		}
 		catch (RestClientException ex) {
 			log.warn("Failed to resolve quest {}: {}", questId, ex.getMessage());

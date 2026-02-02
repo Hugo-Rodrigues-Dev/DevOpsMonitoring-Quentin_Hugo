@@ -4,12 +4,16 @@ import java.time.Duration;
 import java.time.Instant;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
+
+import QuentinXHugo.demo.persistence.DurationToLongConverter;
 
 @Entity
 @Table(name = "quests")
@@ -25,6 +29,8 @@ public class Quest {
 	private String ennemi;
 	private String priorite;
 	private String recompense;
+	@Convert(converter = DurationToLongConverter.class)
+	@Column(name = "duree_estimee_ms")
 	private Duration dureeEstimee;
 	private Instant delaiLimite;
 	private Double latitude;
@@ -38,6 +44,9 @@ public class Quest {
 
 	@Column(length = 1024)
 	private String lastError;
+
+	@Version
+	private long version;
 
 	@PrePersist
 	public void setReceivedAt() {
@@ -172,5 +181,9 @@ public class Quest {
 
 	public void setLastError(String lastError) {
 		this.lastError = lastError;
+	}
+
+	public long getVersion() {
+		return version;
 	}
 }

@@ -8,14 +8,14 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import QuentinXHugo.demo.client.ProfessorClient;
 import QuentinXHugo.demo.config.ProfessorProperties;
 import QuentinXHugo.demo.dto.QuestPayload;
+import QuentinXHugo.demo.mapper.QuestMapper;
 import QuentinXHugo.demo.model.Quest;
 import QuentinXHugo.demo.model.QuestStatus;
 import QuentinXHugo.demo.repository.QuestRepository;
@@ -28,14 +28,18 @@ public class QuestService {
 	private final QuestRepository repository;
 	private final ProfessorClient professorClient;
 	private final ProfessorProperties properties;
+	private final TaskScheduler taskScheduler;
+	private final QuestMapper questMapper;
 
-	public QuestService(QuestRepository repository, ProfessorClient professorClient, ProfessorProperties properties) {
+	public QuestService(QuestRepository repository, ProfessorClient professorClient, ProfessorProperties properties,
+		TaskScheduler taskScheduler, QuestMapper questMapper) {
 		this.repository = repository;
 		this.professorClient = professorClient;
 		this.properties = properties;
+		this.taskScheduler = taskScheduler;
+		this.questMapper = questMapper;
 	}
 
-	@Transactional
 	public Optional<Quest> saveIfNeeded(QuestPayload payload) {
 		if (payload == null || !StringUtils.hasText(payload.getId())) {
 			return Optional.empty();
@@ -45,18 +49,7 @@ public class QuestService {
 			return Optional.empty();
 		}
 
-		quest.setId(payload.getId());
-		quest.setKind(payload.getKind());
-		quest.setTitre(payload.getTitre());
-		quest.setDescription(payload.getDescription());
-		quest.setLieu(payload.getLieu());
-		quest.setEnnemi(payload.getEnnemi());
-		quest.setPriorite(payload.getPriorite());
-		quest.setRecompense(payload.getRecompense());
-		quest.setDureeEstimee(payload.getDureeEstimee());
-		quest.setDelaiLimite(payload.getDelaiLimite());
-		quest.setLatitude(payload.getLatitude());
-		quest.setLongitude(payload.getLongitude());
+		questMapper.applyPayload(quest, payload);
 		quest.setStatus(QuestStatus.RECEIVED);
 		quest.setLastError(null);
 
@@ -71,35 +64,16 @@ public class QuestService {
 		return properties.getProcessingDelay();
 	}
 
-	@Transactional
-	public Optional<Quest> markProcessing(String questId) {
-		return repository.findById(questId).map(quest -> {
-			quest.setStatus(QuestStatus.PROCESSING);
-			quest.setResolvedAt(null);
-			quest.setLastError(null);
-			return quest;
-		});
-	}
-
-	@Transactional
 	public void markResolved(String questId) {
-		repository.findById(questId).ifPresent(quest -> {
-			quest.setStatus(QuestStatus.RESOLVED);
-			quest.setResolvedAt(Instant.now());
-			quest.setLastError(null);
-		});
+		repository.markResolved(questId, QuestStatus.RESOLVED, Instant.now());
 	}
 
-	@Transactional
 	public void markFailed(String questId, String error) {
-		repository.findById(questId).ifPresent(quest -> {
-			quest.setStatus(QuestStatus.FAILED);
-			quest.setLastError(error);
-		});
+		repository.markFailed(questId, QuestStatus.FAILED, error);
 	}
 
 	public List<Quest> listAll() {
-		return repository.findAll(Sort.by(Sort.Direction.DESC, "receivedAt"));
+		return repository.findByStatusNot(QuestStatus.RESOLVED, Sort.by(Sort.Direction.DESC, "receivedAt"));
 	}
 
 	public Optional<Quest> findById(String id) {
@@ -113,15 +87,26 @@ public class QuestService {
 		if (quest.getStatus() == QuestStatus.PROCESSING || quest.getStatus() == QuestStatus.RESOLVED) {
 			return;
 		}
-		markProcessing(quest.getId());
-		doAsyncResolve(quest.getId(), waitDuration);
+		if (!tryMarkProcessing(quest.getId())) {
+			log.info("Quest {} already processing or resolved, skipping scheduling", quest.getId());
+			return;
+		}
+		Duration safeWait = waitDuration != null ? waitDuration : properties.getProcessingDelay();
+		if (safeWait.isNegative()) {
+			safeWait = Duration.ZERO;
+		}
+		Instant scheduledAt = Instant.now().plus(safeWait);
+		taskScheduler.schedule(() -> resolveQuest(quest.getId()), scheduledAt);
+		log.info("Quest {} scheduled for resolution at {}", quest.getId(), scheduledAt);
 	}
 
-	@Async
-	protected void doAsyncResolve(String questId, Duration waitDuration) {
-		Duration safeWait = waitDuration != null ? waitDuration : properties.getProcessingDelay();
+	protected boolean tryMarkProcessing(String questId) {
+		int updated = repository.markProcessingIfIdle(questId, QuestStatus.PROCESSING, QuestStatus.PROCESSING, QuestStatus.RESOLVED);
+		return updated > 0;
+	}
+
+	protected void resolveQuest(String questId) {
 		try {
-			Thread.sleep(Math.max(safeWait.toMillis(), 0));
 			boolean resolved = professorClient.resolveQuest(questId);
 			if (resolved) {
 				markResolved(questId);
@@ -129,10 +114,6 @@ public class QuestService {
 			else {
 				markFailed(questId, "Professor service returned a non-success status");
 			}
-		}
-		catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-			markFailed(questId, "Processing interrupted");
 		}
 		catch (Exception e) {
 			log.warn("Error while processing quest {}: {}", questId, e.getMessage());
