@@ -39,15 +39,15 @@ public class ProfessorClient {
 			ProfessorQuestResponse body = response.getBody();
 			if (response.getStatusCode().is2xxSuccessful() && body != null && Boolean.TRUE.equals(body.getOk())
 				&& body.getQuest() != null) {
-				log.info("Quest fetched from professor: {}", body.getQuest().getId());
+				log.info("Fetched quest from professor questId={} group={}", body.getQuest().getId(), properties.getGroup());
 				return Optional.of(body.getQuest());
 			}
-			log.warn("Unable to fetch quest: status={} codeRetour={} error={}", response.getStatusCode(), body != null ? body.getCodeRetour() : null,
+			log.warn("Failed to fetch quest from professor status={} codeRetour={} error={} group={}", response.getStatusCode(), body != null ? body.getCodeRetour() : null,
 				body != null ? body.getErrorMessage() : null);
 			return Optional.empty();
 		}
 		catch (RestClientException ex) {
-			log.warn("Call to professor service failed: {}", ex.getMessage());
+			log.warn("Fetch quest call failed group={} error={}", properties.getGroup(), ex.getMessage());
 			return Optional.empty();
 		}
 	}
@@ -60,27 +60,27 @@ public class ProfessorClient {
 		try {
 			ResponseEntity<ProfessorQuestResponse> response = restTemplate.postForEntity(uri, null, ProfessorQuestResponse.class);
 			if (!response.getStatusCode().is2xxSuccessful()) {
-				log.warn("Quest {} resolution call returned status {}", questId, response.getStatusCode());
+				log.warn("Quest resolution HTTP failure questId={} status={}", questId, response.getStatusCode());
 				return false;
 			}
 			ProfessorQuestResponse body = response.getBody();
 			if (body == null) {
-				log.warn("Quest {} resolution response missing body", questId);
+				log.warn("Quest resolution response missing body questId={}", questId);
 				return false;
 			}
 			if (!Boolean.TRUE.equals(body.getOk())) {
-				log.warn("Quest {} resolution failed: codeRetour={} error={}", questId, body.getCodeRetour(), body.getErrorMessage());
+				log.warn("Quest resolution rejected questId={} codeRetour={} error={}", questId, body.getCodeRetour(), body.getErrorMessage());
 				return false;
 			}
 			if (body.getCodeRetour() != null && !"OK".equalsIgnoreCase(body.getCodeRetour())) {
-				log.warn("Quest {} resolution returned non-OK codeRetour={}", questId, body.getCodeRetour());
+				log.warn("Quest resolution returned non-OK code questId={} codeRetour={}", questId, body.getCodeRetour());
 				return false;
 			}
-			log.info("Quest {} resolved successfully", questId);
+			log.info("Quest resolved successfully questId={}", questId);
 			return true;
 		}
 		catch (RestClientException ex) {
-			log.warn("Failed to resolve quest {}: {}", questId, ex.getMessage());
+			log.warn("Quest resolution call failed questId={} error={}", questId, ex.getMessage());
 			return false;
 		}
 	}

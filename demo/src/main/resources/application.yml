@@ -21,3 +21,8 @@ royaume:
     group: observabilia
     fetch-delay: 15s
     processing-delay: 5s
+
+logging:
+  structured:
+    ecs:
+      service:

@@ -39,11 +39,11 @@ public class QuestScheduler {
 		QuestPayload payload = payloadOpt.get();
 		questService.saveIfNeeded(payload).ifPresent(quest -> {
 			if (!properties.isEnabled()) {
-				log.info("Quest {} saved (auto-resolve disabled)", quest.getId());
+				log.info("Quest persisted without auto-resolution questId={}", quest.getId());
 				return;
 			}
 			Duration wait = questService.computeWaitDuration(payload);
-			log.info("Scheduling quest {} resolution in {}", quest.getId(), wait);
+			log.info("Auto-scheduling quest resolution questId={} waitDuration={}", quest.getId(), wait);
 			questService.processQuestAsync(quest, wait);
 		});
 	}

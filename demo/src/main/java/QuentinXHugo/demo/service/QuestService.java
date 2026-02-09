@@ -99,7 +99,7 @@ public class QuestService {
 			return;
 		}
 		if (!tryMarkProcessing(quest.getId())) {
-			log.info("Quest {} already processing or resolved, skipping scheduling", quest.getId());
+			log.info("Quest scheduling skipped questId={} status={}", quest.getId(), quest.getStatus());
 			return;
 		}
 		scheduleResolution(quest.getId(), waitDuration);
@@ -124,7 +124,7 @@ public class QuestService {
 		}
 		Instant scheduledAt = Instant.now().plus(safeWait);
 		taskScheduler.schedule(() -> resolveQuest(questId), scheduledAt);
-		log.info("Quest {} scheduled for resolution at {}", questId, scheduledAt);
+		log.info("Quest scheduled questId={} runAt={} waitDuration={}", questId, scheduledAt, safeWait);
 	}
 
 	protected void resolveQuest(String questId) {
@@ -132,13 +132,16 @@ public class QuestService {
 			boolean resolved = professorClient.resolveQuest(questId);
 			if (resolved) {
 				markResolved(questId);
+				log.info("Quest marked resolved questId={}", questId);
 			}
 			else {
-				markFailed(questId, "Professor service returned a non-success status");
+				String error = "Professor service returned a non-success status";
+				markFailed(questId, error);
+				log.warn("Quest resolution failed questId={} reason={}", questId, error);
 			}
 		}
 		catch (Exception e) {
-			log.warn("Error while processing quest {}: {}", questId, e.getMessage());
+			log.warn("Quest resolution encountered exception questId={} error={}", questId, e.getMessage());
 			markFailed(questId, e.getMessage());
 		}
 	}
