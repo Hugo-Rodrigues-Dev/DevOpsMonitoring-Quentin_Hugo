@@ -1,4 +1,6 @@
 FROM eclipse-temurin:25-jdk AS build
+ARG DEVONN_REGISTRY_USERNAME
+ARG DEVONN_REGISTRY_PASSWORD
 WORKDIR /workspace
 
 COPY mvnw mvnw

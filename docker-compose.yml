@@ -2,6 +2,9 @@ services:
   royaume-app:
     build:
       context: ./demo
+      args:
+        DEVONN_REGISTRY_USERNAME: ${DEVONN_REGISTRY_USERNAME}
+        DEVONN_REGISTRY_PASSWORD: ${DEVONN_REGISTRY_PASSWORD}
     image: royaume-app:latest
     ports:
       - "8080:8080"

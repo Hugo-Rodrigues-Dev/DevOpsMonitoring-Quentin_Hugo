@@ -26,6 +26,12 @@ SPRING_PROFILES_ACTIVE=ihm ./mvnw spring-boot:run
 
 ### Via Docker Compose (Postgres)
 
+Ajouter les identifiants Maven pour le registry Devonn (dans `.env` ou en variables d'environnement) :
+```
+DEVONN_REGISTRY_USERNAME=...
+DEVONN_REGISTRY_PASSWORD=...
+```
+
 Choisir le mode dans `.env` (à la racine du repo) :
 ```
 APP_MODE=AUTO
