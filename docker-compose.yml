@@ -11,7 +11,7 @@ services:
     depends_on:
       - postgres
     environment:
-      APP_MODE: ${APP_MODE:-AUTO}
+      SPRING_PROFILES_ACTIVE: docker,${APP_MODE:-auto}
 
   postgres:
     image: postgres:16

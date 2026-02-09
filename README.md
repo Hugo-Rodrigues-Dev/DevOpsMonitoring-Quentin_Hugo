@@ -34,11 +34,11 @@ DEVONN_REGISTRY_PASSWORD=...
 
 Choisir le mode dans `.env` (à la racine du repo) :
 ```
-APP_MODE=AUTO
+APP_MODE=auto
 ```
 ou
 ```
-APP_MODE=IHM
+APP_MODE=ihm
 ```
 
 Puis lancer (depuis la racine du repo) :
