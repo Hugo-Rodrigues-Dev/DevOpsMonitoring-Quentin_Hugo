@@ -96,6 +96,40 @@ services:
     ports:
       - "5601:5601"
 
+  kibana-init:
+    image: curlimages/curl:8.6.0
+    depends_on:
+      - kibana
+    environment:
+      KIBANA_URL: http://kibana:5601
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -e
+        body='{"data_view":{"title":"royaume-quests-*","name":"Royaume Quests","timeFieldName":"@timestamp"}}'
+        max=$${MAX_RETRIES:-30}
+        delay=5
+        i=1
+        echo "Starting kibana-init with KIBANA_URL=$${KIBANA_URL} max=$${max}"
+        while [ $$i -le $$max ]; do
+          if curl -s -o /dev/null "$${KIBANA_URL}/api/status"; then
+            resp=$$(curl -s -o /tmp/resp.json -w "%{http_code}" -X POST "$${KIBANA_URL}/api/data_views/data_view" \
+              -H 'kbn-xsrf: true' -H 'Content-Type: application/json' \
+              -d "$$body")
+            echo "Attempt $$i/$${max}: status $$resp"
+            if [ "$$resp" = "200" ] || [ "$$resp" = "409" ]; then
+              echo "Kibana data view ensured (status $$resp)"; exit 0;
+            else
+              echo "Creation failed (status $$resp):"; cat /tmp/resp.json;
+            fi
+          else
+            echo "Kibana not ready yet ($$i/$${max})"
+          fi
+            i=$$((i+1)); sleep $$delay
+        done
+        echo "Kibana init failed after $$max attempts"; exit 1
+
   filebeat:
     image: docker.elastic.co/beats/filebeat:8.12.2
     user: root
