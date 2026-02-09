@@ -1,9 +1,30 @@
 spring:
   application:
     name: QuentinXHugo
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:h2:mem:questdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE}
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER:org.h2.Driver}
+  jpa:
+    hibernate:
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
+    properties:
+      hibernate:
+        dialect: ${SPRING_JPA_DATABASE_PLATFORM:org.hibernate.dialect.H2Dialect}
+  sql:
+    init:
+      mode: never
 
 royaume:
   ihm:
     group: observabilia
     fake-api: true
     url: http://localhost:8080
+  api:
+    base-url: https://royaume.devonn.io/api
+    default-group: QuentinXHugo
+    connect-timeout: 3s
+    read-timeout: 5s
+    poll-interval: PT5S
+    mode: ${ROYAUME_API_MODE:AUTO}

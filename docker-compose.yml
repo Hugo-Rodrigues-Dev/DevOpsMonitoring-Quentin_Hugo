@@ -1,9 +1,40 @@
 services:
+  postgres:
+    image: postgres:16
+    container_name: royaume-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: observabilia
+      POSTGRES_USER: royaume
+      POSTGRES_PASSWORD: royaume
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   royaume-app:
     build:
       context: ./demo
     image: royaume-app:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
     ports:
       - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: default
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/observabilia
+      SPRING_DATASOURCE_USERNAME: royaume
+      SPRING_DATASOURCE_PASSWORD: royaume
+      SPRING_DATASOURCE_DRIVER: org.postgresql.Driver
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
+      ROYAUME_API_MODE: ${ROYAUME_API_MODE:-AUTO}
+
+volumes:
+  pgdata:
