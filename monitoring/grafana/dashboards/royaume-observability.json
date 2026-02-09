@@ -4,7 +4,7 @@
   "tags": ["royaume", "prometheus", "elasticsearch"],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 1,
+  "version": 6,
   "refresh": "10s",
   "time": {
     "from": "now-15m",
@@ -12,65 +12,149 @@
   },
   "panels": [
     {
-      "id": 1,
+      "id": 6,
       "type": "stat",
-      "title": "Target Up",
+      "title": "Quetes OK (5m, count)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "gridPos": { "h": 4, "w": 12, "x": 0, "y": 0 },
       "targets": [
-        { "expr": "up", "refId": "A" }
+        {
+          "expr": "sum(increase(tasks_scheduled_execution_seconds_count{outcome=\"SUCCESS\"}[5m])) or on() vector(0)",
+          "refId": "A"
+        }
       ],
       "options": {
         "reduceOptions": { "calcs": ["lastNotNull"], "fields": "" },
         "orientation": "horizontal"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0
+        },
+        "overrides": []
       }
     },
     {
-      "id": 2,
-      "type": "timeseries",
-      "title": "CPU (process)",
+      "id": 7,
+      "type": "stat",
+      "title": "Erreurs API partenaire (5m, count)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 9, "x": 6, "y": 0 },
+      "gridPos": { "h": 4, "w": 12, "x": 12, "y": 0 },
       "targets": [
-        { "expr": "process_cpu_usage", "refId": "A" }
+        {
+          "expr": "sum(increase(tasks_scheduled_execution_seconds_count{outcome=\"ERROR\"}[5m])) or on() vector(0)",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "" },
+        "orientation": "horizontal"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Nombre de quetes en cours",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "targets": [
+        {
+          "expr": "executor_queued_tasks{name=\"taskScheduler\"}",
+          "legendFormat": "queued_tasks",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "HTTP Requests (5m)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "targets": [
+        {
+          "expr": "increase(http_server_requests_seconds_count{method=\"GET\", uri=\"/api/royaume/quests\"}[5m])",
+          "legendFormat": "GET /api/royaume/quests",
+          "refId": "A"
+        },
+        {
+          "expr": "increase(http_server_requests_seconds_count{method=\"POST\", uri=\"/api/royaume/quests/{id}/launch\"}[5m])",
+          "legendFormat": "POST /api/royaume/quests/{id}/launch",
+          "refId": "B"
+        }
       ]
     },
     {
       "id": 3,
       "type": "timeseries",
-      "title": "JVM Heap Used",
+      "title": "p95 (ms)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 9, "x": 15, "y": 0 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
       "targets": [
-        { "expr": "sum(jvm_memory_used_bytes{area=\"heap\"})", "refId": "A" }
-      ]
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{method=\"GET\", uri=\"/api/royaume/quests\"}[$__rate_interval])) by (le)) * 1000",
+          "legendFormat": "GET /api/royaume/quests",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{method=\"POST\", uri=\"/api/royaume/quests/{id}/launch\"}[$__rate_interval])) by (le)) * 1000",
+          "legendFormat": "POST /api/royaume/quests/{id}/launch",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 2
+        },
+        "overrides": []
+      }
     },
     {
       "id": 4,
       "type": "timeseries",
-      "title": "HTTP Requests / sec",
+      "title": "p99 (ms)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
       "targets": [
-        { "expr": "sum(rate(http_server_requests_seconds_count[1m]))", "refId": "A" }
-      ]
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{method=\"GET\", uri=\"/api/royaume/quests\"}[$__rate_interval])) by (le)) * 1000",
+          "legendFormat": "GET /api/royaume/quests",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{method=\"POST\", uri=\"/api/royaume/quests/{id}/launch\"}[$__rate_interval])) by (le)) * 1000",
+          "legendFormat": "POST /api/royaume/quests/{id}/launch",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 2
+        },
+        "overrides": []
+      }
     },
     {
       "id": 5,
-      "type": "timeseries",
-      "title": "JVM Threads",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
-      "targets": [
-        { "expr": "jvm_threads_live_threads", "refId": "A" }
-      ]
-    },
-    {
-      "id": 6,
       "type": "logs",
       "title": "Application Logs",
       "datasource": { "type": "elasticsearch", "uid": "elasticsearch" },
-      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 16 },
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 20 },
       "targets": [
         {
           "refId": "A",

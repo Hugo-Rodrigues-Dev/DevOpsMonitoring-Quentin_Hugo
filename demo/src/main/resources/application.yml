@@ -36,6 +36,15 @@ management:
     export:
       prometheus:
         enabled: true
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+      percentiles:
+        http:
+          server:
+            requests: 0.95,0.99
   tracing:
     sampling:
       probability: 1.0
