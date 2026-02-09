@@ -39,4 +39,6 @@ public interface QuestRepository extends JpaRepository<Quest, String> {
 	int markFailed(@Param("id") String id,
 		@Param("status") QuestStatus status,
 		@Param("error") String error);
+
+	long countByStatus(QuestStatus status);
 }
