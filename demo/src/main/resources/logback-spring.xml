@@ -1,0 +1,26 @@
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <springProperty scope="context" name="LOG_FILE_PATH" source="logging.file.name" defaultValue="logs/royaume-quests.json"/>
+    <springProperty scope="context" name="SERVICE_NAME" source="spring.application.name" defaultValue="RoyaumeQuestOrchestrator"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr([%thread]){faint} %clr(%-40.40logger{39}){cyan} : %m%n%wEx</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="JSON_FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${LOG_FILE_PATH}</file>
+        <append>true</append>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <timeZone>UTC</timeZone>
+            <customFields>{"service.name":"${SERVICE_NAME}"}</customFields>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="JSON_FILE"/>
+    </root>
+</configuration>

@@ -2,11 +2,20 @@ filebeat.inputs:
   - type: filestream
     id: royaume-app
     paths:
-      - /logs/*.log
+      - /logs/*.json
     parsers:
       - ndjson:
           overwrite_keys: true
           add_error_key: true
 
-output.logstash:
-  hosts: ["logstash:5044"]
+setup.ilm.enabled: false
+setup.template.enabled: true
+setup.template.name: "royaume-quests"
+setup.template.pattern: "royaume-quests-*"
+setup.template.settings:
+  index.number_of_shards: 1
+  index.number_of_replicas: 0
+
+output.elasticsearch:
+  hosts: ["http://elasticsearch:9200"]
+  index: "royaume-quests-%{+yyyy.MM.dd}"

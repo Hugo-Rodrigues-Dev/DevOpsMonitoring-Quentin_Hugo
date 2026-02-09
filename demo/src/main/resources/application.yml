@@ -48,6 +48,5 @@ management:
         url: ${OTEL_METRICS_EXPORTER_ENDPOINT}
 
 logging:
-  structured:
-    ecs:
-      service:
+  file:
+    name: ${LOG_FILE:logs/royaume-quests.json}

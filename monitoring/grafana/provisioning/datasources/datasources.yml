@@ -1,0 +1,24 @@
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    uid: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+
+  - name: Elasticsearch
+    type: elasticsearch
+    uid: elasticsearch
+    access: proxy
+    url: http://elasticsearch:9200
+    jsonData:
+      index: "[royaume-quests-]YYYY.MM.DD"
+      timeField: "@timestamp"
+      esVersion: 8
+      interval: Daily
+      logMessageField: message
+      logLevelField: log.level
+    editable: true

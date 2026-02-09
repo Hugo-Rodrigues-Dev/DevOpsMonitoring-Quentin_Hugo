@@ -52,7 +52,7 @@ Conteneurs démarrés :
 - `postgres`
 - `otel-collector` + `jaeger` (traces)
 - `prometheus` (scrape /actuator/prometheus) + `grafana` (http://localhost:3000)
-- `elasticsearch` + `logstash` + `filebeat` + `kibana` (http://localhost:5601)
+- `elasticsearch` + `filebeat` + `kibana` (http://localhost:5601)
 
 Ports utiles :
 - API : `http://localhost:8080`

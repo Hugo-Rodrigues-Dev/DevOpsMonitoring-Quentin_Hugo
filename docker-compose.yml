@@ -16,6 +16,7 @@ services:
       SPRING_PROFILES_ACTIVE: docker,${APP_MODE:-auto}
       OTEL_TRACES_EXPORTER_ENDPOINT: ${OTEL_TRACES_EXPORTER_ENDPOINT}
       OTEL_METRICS_EXPORTER_ENDPOINT: ${OTEL_METRICS_EXPORTER_ENDPOINT}
+      LOG_FILE: /app/logs/royaume-quests.json
     volumes:
       - app_logs:/app/logs
 
@@ -71,6 +72,9 @@ services:
       - "3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/dashboards:/etc/grafana/dashboards:ro
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
@@ -92,21 +96,11 @@ services:
     ports:
       - "5601:5601"
 
-  logstash:
-    image: docker.elastic.co/logstash/logstash:8.12.2
-    depends_on:
-      - elasticsearch
-    volumes:
-      - ./logging/logstash/pipeline:/usr/share/logstash/pipeline:ro
-    ports:
-      - "5044:5044"
-      - "9600:9600"
-
   filebeat:
     image: docker.elastic.co/beats/filebeat:8.12.2
     user: root
     depends_on:
-      - logstash
+      - elasticsearch
     command: ["filebeat", "-e", "--strict.perms=false"]
     volumes:
       - ./logging/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
