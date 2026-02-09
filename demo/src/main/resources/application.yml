@@ -32,6 +32,20 @@ management:
   endpoint:
     health:
       show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: ${OTEL_TRACES_EXPORTER_ENDPOINT}
+    metrics:
+      export:
+        enabled: true
+        url: ${OTEL_METRICS_EXPORTER_ENDPOINT}
 
 logging:
   structured:

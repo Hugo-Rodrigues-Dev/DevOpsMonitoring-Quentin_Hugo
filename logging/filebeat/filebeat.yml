@@ -1,0 +1,12 @@
+filebeat.inputs:
+  - type: filestream
+    id: royaume-app
+    paths:
+      - /logs/*.log
+    parsers:
+      - ndjson:
+          overwrite_keys: true
+          add_error_key: true
+
+output.logstash:
+  hosts: ["logstash:5044"]

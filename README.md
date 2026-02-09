@@ -24,32 +24,44 @@ cd demo
 SPRING_PROFILES_ACTIVE=ihm ./mvnw spring-boot:run
 ```
 
-### Via Docker Compose (Postgres)
+### Via Docker Compose (Postgres + Observabilité)
 
-Ajouter les identifiants Maven pour le registry Devonn (dans `.env` ou en variables d'environnement) :
+Configurer le fichier `.env` (existe à la racine) :
 ```
-DEVONN_REGISTRY_USERNAME=...
+APP_MODE=auto            # ou ihm
+DEVONN_REGISTRY_USERNAME=Reader
 DEVONN_REGISTRY_PASSWORD=...
+OTEL_TRACES_EXPORTER_ENDPOINT=http://otel-collector:4317
+OTEL_METRICS_EXPORTER_ENDPOINT=http://otel-collector:4318/v1/metrics
+GF_SECURITY_ADMIN_USER=admin
+GF_SECURITY_ADMIN_PASSWORD=admin
 ```
 
-Choisir le mode dans `.env` (à la racine du repo) :
-```
-APP_MODE=auto
-```
-ou
-```
-APP_MODE=ihm
-```
-
-Puis lancer (depuis la racine du repo) :
+Commandes attendues :
 ```bash
-docker compose up -d --build
+docker compose down -v
+docker compose up --build --pull --force-recreate -d
+```
+ou en une seule ligne :
+```bash
+docker compose down -v ; docker compose up --build --pull always --force-recreate -d
 ```
 
-Arrêter :
-```bash
-docker compose down
-```
+Conteneurs démarrés :
+- `royaume-app` (Spring Boot + Actuator 8080/8090)
+- `postgres`
+- `otel-collector` + `jaeger` (traces)
+- `prometheus` (scrape /actuator/prometheus) + `grafana` (http://localhost:3000)
+- `elasticsearch` + `logstash` + `filebeat` + `kibana` (http://localhost:5601)
+
+Ports utiles :
+- API : `http://localhost:8080`
+- Actuator/Prometheus scrape : `http://localhost:8090/actuator/*`
+- Prometheus : `http://localhost:9090`
+- Grafana : `http://localhost:3000`
+- Elasticsearch : `http://localhost:9200`
+- Kibana : `http://localhost:5601`
+- Jaeger UI : `http://localhost:16686`
 
 ### Vérifier rapidement
 
