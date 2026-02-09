@@ -22,6 +22,17 @@ royaume:
     fetch-delay: 15s
     processing-delay: 5s
 
+management:
+  server:
+    port: 8090
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
 logging:
   structured:
     ecs:
