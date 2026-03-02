@@ -3,7 +3,7 @@ import io.gatling.http.Predef._
 import scala.concurrent.duration._
 import scala.util.Random
 
-class IhmQuestLaunchSimulation extends Simulation {
+class AutoQuestLaunchSimulation extends Simulation {
 
   private def requiredEnv(name: String): String =
     sys.env.getOrElse(name, throw new IllegalArgumentException(s"Missing required env var: $name"))
