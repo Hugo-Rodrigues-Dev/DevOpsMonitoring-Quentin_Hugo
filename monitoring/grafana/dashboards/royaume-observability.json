@@ -46,7 +46,7 @@
     {
       "id": 2,
       "type": "timeseries",
-      "title": "Nombre de qu\u00eates en cours",
+      "title": "Repartition des quetes par statut",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -94,7 +94,7 @@
     {
       "id": 7,
       "type": "stat",
-      "title": "Erreurs API partenaire (5m, count)",
+      "title": "Erreurs lors des appels au service partenaire (5 min)",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -177,7 +177,7 @@
     {
       "id": 8,
       "type": "timeseries",
-      "title": "HTTP Requests (5m)",
+      "title": "Volume des requetes API sur 5 minutes",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -219,9 +219,54 @@
       }
     },
     {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Utilisation des thread pools",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 12
+      },
+      "targets": [
+        {
+          "expr": "executor_active_threads{instance=~\"$instance\"}",
+          "legendFormat": "Threads actifs - {{name}}",
+          "refId": "A"
+        },
+        {
+          "expr": "executor_pool_size_threads{instance=~\"$instance\"}",
+          "legendFormat": "Taille du pool - {{name}}",
+          "refId": "B"
+        },
+        {
+          "expr": "executor_queued_tasks{instance=~\"$instance\"}",
+          "legendFormat": "Taches en attente - {{name}}",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 20,
+            "gradientMode": "opacity",
+            "showPoints": "auto"
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
       "id": 3,
       "type": "timeseries",
-      "title": "p95 (ms)",
+      "title": "Latence p95 des endpoints API (ms)",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -230,7 +275,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 12
+        "y": 20
       },
       "targets": [
         {
@@ -267,7 +312,7 @@
     {
       "id": 4,
       "type": "timeseries",
-      "title": "p99 (ms)",
+      "title": "Latence p99 des endpoints API (ms)",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -276,7 +321,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 12
+        "y": 20
       },
       "targets": [
         {
@@ -313,7 +358,7 @@
     {
       "id": 5,
       "type": "logs",
-      "title": "Application Logs",
+      "title": "Logs applicatifs",
       "datasource": {
         "type": "elasticsearch",
         "uid": "elasticsearch"
@@ -322,7 +367,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 20
+        "y": 28
       },
       "targets": [
         {
