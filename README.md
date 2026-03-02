@@ -26,7 +26,12 @@ SPRING_PROFILES_ACTIVE=ihm ./mvnw spring-boot:run
 
 ### Via Docker Compose (Postgres + Observabilité)
 
-Configurer le fichier `.env` (existe à la racine) :
+Créer votre `.env` à partir du template puis ajuster les valeurs :
+```bash
+cp .env.example .env
+```
+
+Variables principales :
 ```
 APP_MODE=auto            # ou ihm
 DEVONN_REGISTRY_USERNAME=Reader
@@ -35,6 +40,9 @@ OTEL_TRACES_EXPORTER_ENDPOINT=http://otel-collector:4317
 OTEL_METRICS_EXPORTER_ENDPOINT=http://otel-collector:4318/v1/metrics
 GF_SECURITY_ADMIN_USER=admin
 GF_SECURITY_ADMIN_PASSWORD=admin
+POSTGRES_DB=royaume
+POSTGRES_USER=royaume
+POSTGRES_PASSWORD=...
 ```
 
 Commandes attendues :

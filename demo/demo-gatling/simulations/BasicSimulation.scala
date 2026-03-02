@@ -4,11 +4,16 @@ import scala.concurrent.duration._
 
 class BasicSimulation extends Simulation {
 
-  // On lit l'URL de l'API dans une variable d'environnement
-  val baseUrl: String = sys.env.getOrElse("API_BASE_URL", "http://royaume-app:8080")
-  val uri: String = sys.env.getOrElse("API_URI", "/api/royaume/quests")
-  val users: Int = sys.env.getOrElse("USERS", "10").toInt
-  val durationSeconds: Int = sys.env.getOrElse("DURATION_SECONDS", "30").toInt
+  private def requiredEnv(name: String): String =
+    sys.env.getOrElse(name, throw new IllegalArgumentException(s"Missing required env var: $name"))
+
+  private def requiredInt(name: String): Int =
+    requiredEnv(name).toInt
+
+  val baseUrl: String = requiredEnv("API_BASE_URL")
+  val uri: String = requiredEnv("API_URI")
+  val users: Int = requiredInt("USERS")
+  val durationSeconds: Int = requiredInt("DURATION_SECONDS")
 
   val httpProtocol = http
     .baseUrl(baseUrl)

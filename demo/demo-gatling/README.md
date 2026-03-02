@@ -37,7 +37,6 @@ gatling-sample/
 |-- entrypoint.sh
 |-- simulations/                     # Simulations Scala
 |   |-- BasicSimulation.scala        # Smoke test de l'API des quetes
-|   |-- ArtefactSearchSimulation.scala  # Variante simple de navigation IHM
 |   `-- IhmQuestLaunchSimulation.scala  # Scenario principal pour le mode IHM
 |-- docs/
 |   |-- RECORDER.md
@@ -53,34 +52,36 @@ gatling-sample/
 docker compose --profile bench up --build
 ```
 
-Par defaut, cela lance `IhmQuestLaunchSimulation` avec **20 utilisateurs** en
-rampe sur **60 secondes** contre `http://royaume-app:8080` depuis le reseau
-Docker, avec l'application en mode `ihm`.
-
-Pour lancer le bench en mode explicite :
+Toutes les valeurs sont centralisees dans le `.env` racine.
+Pour lancer le bench avec ce parametrage :
 
 ```bash
-APP_MODE=ihm docker compose --profile bench up --build
+docker compose --profile bench up --build
 ```
 
 ---
 
 ## Variables d'environnement
 
-| Variable | Description | Defaut |
-|---|---|---|
-| `APP_MODE` | Profil Spring applique a l'application | `ihm` |
-| `GATLING_SIMULATION_CLASS` | Classe Scala a executer | `IhmQuestLaunchSimulation` |
-| `GATLING_USERS` | Nombre d'utilisateurs | `20` |
-| `GATLING_DURATION_SECONDS` | Duree (secondes) | `60` |
-| `GATLING_THINK_TIME_MS` | Temps de pause utilisateur entre actions | `750` |
+| Variable | Description |
+|---|---|
+| `APP_MODE` | Profil Spring applique a l'application |
+| `POSTGRES_DB` | Nom de la base Postgres |
+| `POSTGRES_USER` | Utilisateur Postgres |
+| `POSTGRES_PASSWORD` | Mot de passe Postgres |
+| `GATLING_API_BASE_URL` | URL cible du bench |
+| `GATLING_API_URI` | Endpoint pour `BasicSimulation` |
+| `GATLING_QUESTS_BASE_PATH` | Endpoint base pour `IhmQuestLaunchSimulation` |
+| `GATLING_LAUNCH_DELAY_MS` | Delai envoye lors du lancement de quete |
+| `GATLING_SIMULATION_CLASS` | Classe Scala a executer |
+| `GATLING_USERS` | Nombre d'utilisateurs |
+| `GATLING_DURATION_SECONDS` | Duree (secondes) |
+| `GATLING_THINK_TIME_MS` | Pause utilisateur entre actions |
 
 ```bash
-APP_MODE=ihm \
-GATLING_USERS=50 \
-GATLING_DURATION_SECONDS=60 \
-GATLING_SIMULATION_CLASS=IhmQuestLaunchSimulation \
-docker compose --profile bench up --build
+cd ../..
+cp .env.example .env
+# puis editer .env selon l'environnement cible
 ```
 
 ---
@@ -95,20 +96,6 @@ tenue en charge de `GET /api/royaume/quests`.
 ```text
 rampUsers(N) during (D secondes)
   -> GET /api/royaume/quests -> attend HTTP 200
-```
-
-### `ArtefactSearchSimulation`
-
-Variante simple de navigation IHM :
-- liste les quetes
-- rafraichit la liste une seconde fois
-- lance une quete aleatoire issue de la liste
-
-```text
-rampUsers(N) during (D secondes)
-  -> GET /api/royaume/quests
-  -> GET /api/royaume/quests
-  -> POST /api/royaume/quests/{id}/launch?delayMs=0
 ```
 
 ### `IhmQuestLaunchSimulation`

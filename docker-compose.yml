@@ -13,7 +13,7 @@ services:
       - "8080:8080"
       - "8090:8090"
     environment:
-      SPRING_PROFILES_ACTIVE: docker,${APP_MODE:-ihm}
+      SPRING_PROFILES_ACTIVE: docker,${APP_MODE}
       OTEL_TRACES_EXPORTER_ENDPOINT: ${OTEL_TRACES_EXPORTER_ENDPOINT}
       OTEL_METRICS_EXPORTER_ENDPOINT: ${OTEL_METRICS_EXPORTER_ENDPOINT}
       LOG_FILE: /app/logs/royaume-quests.json
@@ -23,9 +23,9 @@ services:
   postgres:
     image: postgres:16
     environment:
-      POSTGRES_DB: royaume
-      POSTGRES_USER: royaume
-      POSTGRES_PASSWORD: royaume
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -148,11 +148,14 @@ services:
     depends_on:
       - royaume-app
     environment:
-      API_BASE_URL: http://royaume-app:8080
-      GATLING_SIMULATION_CLASS: ${GATLING_SIMULATION_CLASS:-IhmQuestLaunchSimulation}
-      USERS: ${GATLING_USERS:-20}
-      DURATION_SECONDS: ${GATLING_DURATION_SECONDS:-60}
-      THINK_TIME_MS: ${GATLING_THINK_TIME_MS:-750}
+      API_BASE_URL: ${GATLING_API_BASE_URL}
+      API_URI: ${GATLING_API_URI}
+      QUESTS_BASE_PATH: ${GATLING_QUESTS_BASE_PATH}
+      LAUNCH_DELAY_MS: ${GATLING_LAUNCH_DELAY_MS}
+      GATLING_SIMULATION_CLASS: ${GATLING_SIMULATION_CLASS}
+      USERS: ${GATLING_USERS}
+      DURATION_SECONDS: ${GATLING_DURATION_SECONDS}
+      THINK_TIME_MS: ${GATLING_THINK_TIME_MS}
     volumes:
       - ./demo/demo-gatling/result:/opt/gatling/results
 
