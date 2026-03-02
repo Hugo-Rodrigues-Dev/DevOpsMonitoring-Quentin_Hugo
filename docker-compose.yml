@@ -13,7 +13,7 @@ services:
       - "8080:8080"
       - "8090:8090"
     environment:
-      SPRING_PROFILES_ACTIVE: docker,${APP_MODE:-auto}
+      SPRING_PROFILES_ACTIVE: docker,${APP_MODE:-ihm}
       OTEL_TRACES_EXPORTER_ENDPOINT: ${OTEL_TRACES_EXPORTER_ENDPOINT}
       OTEL_METRICS_EXPORTER_ENDPOINT: ${OTEL_METRICS_EXPORTER_ENDPOINT}
       LOG_FILE: /app/logs/royaume-quests.json
@@ -139,6 +139,22 @@ services:
     volumes:
       - ./logging/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
       - app_logs:/logs:ro
+
+  gatling:
+    profiles: ["bench"]
+    build:
+      context: ./demo/demo-gatling
+      dockerfile: Dockerfile
+    depends_on:
+      - royaume-app
+    environment:
+      API_BASE_URL: http://royaume-app:8080
+      GATLING_SIMULATION_CLASS: ${GATLING_SIMULATION_CLASS:-IhmQuestLaunchSimulation}
+      USERS: ${GATLING_USERS:-20}
+      DURATION_SECONDS: ${GATLING_DURATION_SECONDS:-60}
+      THINK_TIME_MS: ${GATLING_THINK_TIME_MS:-750}
+    volumes:
+      - ./demo/demo-gatling/result:/opt/gatling/results
 
 volumes:
   postgres_data:

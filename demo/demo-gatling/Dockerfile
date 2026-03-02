@@ -29,7 +29,7 @@ COPY simulations ${GATLING_HOME}/user-files/simulations
 
 # Copier le script d'entrée
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
 
 # Classe de simulation à lancer (sans package)
 ENV GATLING_SIMULATION_CLASS=BasicSimulation

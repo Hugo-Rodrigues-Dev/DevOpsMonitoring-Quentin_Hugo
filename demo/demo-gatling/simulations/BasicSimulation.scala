@@ -5,8 +5,8 @@ import scala.concurrent.duration._
 class BasicSimulation extends Simulation {
 
   // On lit l'URL de l'API dans une variable d'environnement
-  val baseUrl: String = sys.env.getOrElse("API_BASE_URL", "http://localhost:8080")
-  val uri: String = sys.env.getOrElse("API_URI", "/actuator/health")
+  val baseUrl: String = sys.env.getOrElse("API_BASE_URL", "http://royaume-app:8080")
+  val uri: String = sys.env.getOrElse("API_URI", "/api/royaume/quests")
   val users: Int = sys.env.getOrElse("USERS", "10").toInt
   val durationSeconds: Int = sys.env.getOrElse("DURATION_SECONDS", "30").toInt
 
