@@ -52,17 +52,35 @@ Toutes les valeurs sont centralisees dans le `.env` racine.
 Il n'y a pas de fallback dans le `docker-compose.yml` : les variables attendues
 doivent etre presentes dans `.env`.
 
-Pour lancer le bench IHM :
+1. Si la stack est arretee, demarrer les services:
 
 ```bash
-APP_MODE=ihm docker compose --profile bench-ihm up --build
+docker compose up -d --build
 ```
 
-Pour lancer le bench auto :
+2. Bench IHM nominal (attendu OK):
 
 ```bash
-APP_MODE=auto docker compose --profile bench-auto up --build
+APP_MODE=ihm docker compose --profile bench-ihm up --build gatling-ihm
 ```
+
+3. Bench AUTO nominal (attendu OK):
+
+```bash
+APP_MODE=auto docker compose --profile bench-auto up --build gatling-auto
+```
+
+4. Cas de controle volontairement en erreur:
+
+```bash
+APP_MODE=ihm docker compose --profile bench-auto up --build gatling-auto
+```
+
+Pourquoi ce dernier cas renvoie des erreurs:
+- en `APP_MODE=ihm`, les quetes visibles sont principalement `RECEIVED`.
+- `AutoQuestLaunchSimulation` exige au moins une quete `PROCESSING`.
+- la simulation verifie explicitement cette condition (`Verifier au moins une quete PROCESSING (AUTO)`), puis tente un `resolve` qui peut renvoyer `404`.
+- le rapport affiche donc des `KO` explicites pour eviter un faux vert.
 
 ---
 
@@ -121,20 +139,29 @@ rampUsers(N) during (D secondes)
 ### `AutoQuestLaunchSimulation`
 
 Simulation dediee au mode auto.
-Son contenu est maintenu separement et se lance via le profil `bench-auto`.
+Chaque V-User:
+- attend au debut qu'au moins une quete `PROCESSING` soit presente
+- liste les quetes auto
+- tente un `resolve` sur une quete en cours
+
+La simulation est configuree en fail-fast:
+- si aucune quete `PROCESSING` n'est disponible dans le delai de warmup, elle genere des `KO` explicites.
 
 ---
 
 ## Lire les resultats
 
+Linux:
 ```bash
 xdg-open result/$(ls -t result/ | head -1)/index.html
 ```
 
-Le rapport HTML s'ouvre directement dans le navigateur.
-
-Sous Windows, ouvrir simplement le fichier `index.html` du dernier dossier cree
-dans `result/`.
+WSL/Windows (depuis n'importe quel dossier):
+```bash
+ROOT="$(git rev-parse --show-toplevel)"
+LATEST="$(ls -t "$ROOT/demo/demo-gatling/result" | head -1)"
+explorer.exe "$(wslpath -w "$ROOT/demo/demo-gatling/result/$LATEST/index.html")"
+```
 
 ---
 

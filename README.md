@@ -34,6 +34,7 @@ cp .env.example .env
 Variables principales :
 ```
 APP_MODE=auto            # ou ihm
+ROYAUME_PROFESSOR_FETCH_DELAY=2s
 DEVONN_REGISTRY_USERNAME=Reader
 DEVONN_REGISTRY_PASSWORD=...
 OTEL_TRACES_EXPORTER_ENDPOINT=http://otel-collector:4317
@@ -43,6 +44,7 @@ GF_SECURITY_ADMIN_PASSWORD=admin
 POSTGRES_DB=royaume
 POSTGRES_USER=royaume
 POSTGRES_PASSWORD=...
+GATLING_WARMUP_TIMEOUT_SECONDS=30
 ```
 
 Commandes attendues :
@@ -53,6 +55,33 @@ docker compose up --build --pull --force-recreate -d
 ou en une seule ligne :
 ```bash
 docker compose down -v ; docker compose up --build --pull always --force-recreate -d
+```
+
+### Bench Gatling - commandes par cas
+
+1. Cas IHM nominal (attendu OK)
+```bash
+APP_MODE=ihm docker compose up -d --build
+APP_MODE=ihm docker compose --profile bench-ihm up --build gatling-ihm
+```
+
+2. Cas AUTO nominal (attendu OK)
+```bash
+APP_MODE=auto docker compose up -d --build
+APP_MODE=auto docker compose --profile bench-auto up --build gatling-auto
+```
+
+3. Cas de controle volontairement en erreur (attendu KO)
+```bash
+APP_MODE=ihm docker compose --profile bench-auto up --build gatling-auto
+```
+Ce cas produit des erreurs par design: en mode `ihm`, l'API renvoie surtout des quetes `RECEIVED`, alors que la simulation `AutoQuestLaunchSimulation` exige des quetes `PROCESSING` et verifie explicitement cette condition.
+
+4. Ouvrir le dernier rapport (WSL/Windows)
+```bash
+ROOT="$(git rev-parse --show-toplevel)"
+LATEST="$(ls -t "$ROOT/demo/demo-gatling/result" | head -1)"
+explorer.exe "$(wslpath -w "$ROOT/demo/demo-gatling/result/$LATEST/index.html")"
 ```
 
 Conteneurs démarrés :

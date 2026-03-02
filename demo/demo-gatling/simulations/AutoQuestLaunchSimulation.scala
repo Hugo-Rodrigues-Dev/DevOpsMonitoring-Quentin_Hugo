@@ -1,9 +1,10 @@
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
 import scala.concurrent.duration._
-import scala.util.Random
 
 class AutoQuestLaunchSimulation extends Simulation {
+
+  private val MissingQuestId = "__missing_processing_quest__"
 
   private def requiredEnv(name: String): String =
     sys.env.getOrElse(name, throw new IllegalArgumentException(s"Missing required env var: $name"))
@@ -17,60 +18,77 @@ class AutoQuestLaunchSimulation extends Simulation {
   val users: Int = requiredInt("USERS")
   val durationSeconds: Int = requiredInt("DURATION_SECONDS")
   val thinkTimeMs: Int = requiredInt("THINK_TIME_MS")
+  val warmupTimeoutSeconds: Int = requiredInt("WARMUP_TIMEOUT_SECONDS")
 
   val httpProtocol = http
     .baseUrl(baseUrl)
     .acceptHeader("application/json")
     .contentTypeHeader("application/json")
 
-  val listQuests = http("Lister les quetes IHM")
+  val listQuests = http("Lister les quetes AUTO")
     .get(questsBasePath)
     .check(
       status.is(200),
       jsonPath("$[*].id").findAll.optional.saveAs("questIds"),
-      jsonPath("$[*].latitude").findAll.optional.saveAs("questLatitudes"),
-      jsonPath("$[*].longitude").findAll.optional.saveAs("questLongitudes")
+      jsonPath("$[*].status").findAll.optional.saveAs("questStatuses")
     )
 
-  val launchQuest = http("Lancer une quete IHM")
-    .post(s"$questsBasePath/#{selectedQuestId}/launch")
+  val assertProcessingQuestAvailable = http("Verifier au moins une quete PROCESSING (AUTO)")
+    .get(questsBasePath)
+    .check(
+      status.is(200),
+      jsonPath("$[*].status")
+        .findAll
+        .transform((statuses: Seq[String]) => statuses.contains("PROCESSING"))
+        .is(true)
+    )
+
+  val updateAutoReadiness = exec { session =>
+    val statuses = session("questStatuses").asOption[Seq[Any]].getOrElse(Seq.empty).map(_.toString)
+    val hasProcessingQuest = statuses.contains("PROCESSING")
+    session.set("hasProcessingQuest", hasProcessingQuest)
+  }
+
+  val waitForAutoProcessing = asLongAsDuring(
+    session => !session("hasProcessingQuest").asOption[Boolean].contains(true),
+    warmupTimeoutSeconds.seconds
+  ) {
+    exec(listQuests)
+      .exec(updateAutoReadiness)
+      .pause(1.second)
+  }
+
+  val triggerResolve = http("Declencher resolve AUTO")
+    .post(s"$questsBasePath/#{selectedQuestId}/resolve")
     .queryParam("delayMs", launchDelayMs.toString)
     .check(status.is(202))
 
-  val selectRandomQuest = exec { session =>
+  val selectProcessingQuest = exec { session =>
     val ids = session("questIds").asOption[Seq[Any]].getOrElse(Seq.empty).map(_.toString)
+    val statuses = session("questStatuses").asOption[Seq[Any]].getOrElse(Seq.empty).map(_.toString)
+    val processingIndex = statuses.indexOf("PROCESSING")
 
-    if (ids.isEmpty) {
+    if (processingIndex >= 0 && processingIndex < ids.size) {
       session
-        .remove("selectedQuestId")
-        .set("hasQuestToLaunch", false)
+        .set("selectedQuestId", ids(processingIndex))
+        .set("canTriggerResolve", true)
     } else {
-      val selectedIndex = Random.nextInt(ids.size)
-      val selectedId = ids(selectedIndex)
-      val latitudes = session("questLatitudes").asOption[Seq[Any]].getOrElse(Seq.empty)
-      val longitudes = session("questLongitudes").asOption[Seq[Any]].getOrElse(Seq.empty)
-
-      val selectedLatitude = if (selectedIndex < latitudes.size) latitudes(selectedIndex).toString else "n/a"
-      val selectedLongitude = if (selectedIndex < longitudes.size) longitudes(selectedIndex).toString else "n/a"
-      val zoomLevel = 4 + Random.nextInt(7)
-
       session
-        .set("selectedQuestId", selectedId)
-        .set("selectedLatitude", selectedLatitude)
-        .set("selectedLongitude", selectedLongitude)
-        .set("zoomLevel", zoomLevel)
-        .set("hasQuestToLaunch", true)
+        .set("selectedQuestId", MissingQuestId)
+        .set("canTriggerResolve", false)
     }
   }
 
-  val scn = scenario("Parcours IHM - lister et lancer une quete")
+  val scn = scenario("Parcours AUTO - observer et relancer")
+    .exec(session => session.set("hasProcessingQuest", false))
+    .exec(waitForAutoProcessing)
+    .exec(assertProcessingQuestAvailable)
     .during(durationSeconds.seconds) {
       exec(listQuests)
-        .exec(selectRandomQuest)
+        .exec(updateAutoReadiness)
+        .exec(selectProcessingQuest)
         .pause(thinkTimeMs.milliseconds)
-        .doIf(session => session("hasQuestToLaunch").asOption[Boolean].contains(true)) {
-          exec(launchQuest)
-        }
+        .exec(triggerResolve)
         .pause(1.second)
     }
 
