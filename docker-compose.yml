@@ -141,8 +141,8 @@ services:
       - ./logging/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
       - app_logs:/logs:ro
 
-  gatling:
-    profiles: ["bench"]
+  gatling-ihm:
+    profiles: ["bench-ihm"]
     build:
       context: ./demo/demo-gatling
       dockerfile: Dockerfile
@@ -153,7 +153,27 @@ services:
       API_URI: ${GATLING_API_URI}
       QUESTS_BASE_PATH: ${GATLING_QUESTS_BASE_PATH}
       LAUNCH_DELAY_MS: ${GATLING_LAUNCH_DELAY_MS}
-      GATLING_SIMULATION_CLASS: ${GATLING_SIMULATION_CLASS}
+      GATLING_SIMULATION_CLASS: IhmQuestLaunchSimulation
+      USERS: ${GATLING_USERS}
+      DURATION_SECONDS: ${GATLING_DURATION_SECONDS}
+      THINK_TIME_MS: ${GATLING_THINK_TIME_MS}
+      WARMUP_TIMEOUT_SECONDS: ${GATLING_WARMUP_TIMEOUT_SECONDS}
+    volumes:
+      - ./demo/demo-gatling/result:/opt/gatling/results
+
+  gatling-auto:
+    profiles: ["bench-auto"]
+    build:
+      context: ./demo/demo-gatling
+      dockerfile: Dockerfile
+    depends_on:
+      - royaume-app
+    environment:
+      API_BASE_URL: ${GATLING_API_BASE_URL}
+      API_URI: ${GATLING_API_URI}
+      QUESTS_BASE_PATH: ${GATLING_QUESTS_BASE_PATH}
+      LAUNCH_DELAY_MS: ${GATLING_LAUNCH_DELAY_MS}
+      GATLING_SIMULATION_CLASS: AutoQuestLaunchSimulation
       USERS: ${GATLING_USERS}
       DURATION_SECONDS: ${GATLING_DURATION_SECONDS}
       THINK_TIME_MS: ${GATLING_THINK_TIME_MS}

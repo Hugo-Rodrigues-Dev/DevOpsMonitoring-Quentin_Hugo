@@ -1,10 +1,9 @@
 # Gatling Sample - Tests de charge
 
-Le bench est lance depuis le `docker-compose.yml` principal du projet, via le
-service `gatling` et le profil `bench`.
-
-Le mode par defaut est maintenant `ihm`, afin que la simulation principale
-charge l'application avec des quetes visibles et lancables depuis l'IHM.
+Le bench est lance depuis le `docker-compose.yml` principal du projet, via deux
+profils distincts :
+- `bench-ihm` pour la simulation IHM
+- `bench-auto` pour la simulation auto
 
 > **Linux uniquement** pour le mode recorder local.
 
@@ -49,18 +48,20 @@ gatling-sample/
 
 ## Lancer un tir de charge
 
-```bash
-docker compose --profile bench up --build
-```
-
 Toutes les valeurs sont centralisees dans le `.env` racine.
 Il n'y a pas de fallback dans le `docker-compose.yml` : les variables attendues
 doivent etre presentes dans `.env`.
 
-Pour lancer le bench avec ce parametrage :
+Pour lancer le bench IHM :
 
 ```bash
-docker compose --profile bench up --build
+APP_MODE=ihm docker compose --profile bench-ihm up --build
+```
+
+Pour lancer le bench auto :
+
+```bash
+APP_MODE=auto docker compose --profile bench-auto up --build
 ```
 
 ---
@@ -78,7 +79,6 @@ docker compose --profile bench up --build
 | `GATLING_API_URI` | Endpoint pour `BasicSimulation` |
 | `GATLING_QUESTS_BASE_PATH` | Endpoint base pour `IhmQuestLaunchSimulation` |
 | `GATLING_LAUNCH_DELAY_MS` | Delai envoye lors du lancement de quete |
-| `GATLING_SIMULATION_CLASS` | Classe Scala complete a executer |
 | `GATLING_USERS` | Nombre d'utilisateurs |
 | `GATLING_DURATION_SECONDS` | Duree (secondes) |
 | `GATLING_THINK_TIME_MS` | Pause utilisateur entre actions |
@@ -118,6 +118,11 @@ rampUsers(N) during (D secondes)
   -> POST /api/royaume/quests/{id}/launch?delayMs=0
 ```
 
+### `AutoQuestLaunchSimulation`
+
+Simulation dediee au mode auto.
+Son contenu est maintenu separement et se lance via le profil `bench-auto`.
+
 ---
 
 ## Lire les resultats
@@ -139,7 +144,7 @@ dans `result/`.
 2. Lancer :
 
 ```bash
-GATLING_SIMULATION_CLASS=MaSimulation docker compose --profile bench up --build
+docker compose --profile bench-ihm up --build
 ```
 
 > Les simulations sont copiees dans l'image au build - toute modification
