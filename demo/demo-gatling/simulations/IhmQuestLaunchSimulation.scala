@@ -5,6 +5,8 @@ import scala.util.Random
 
 class IhmQuestLaunchSimulation extends Simulation {
 
+  private val MissingQuestId = "__missing_quest__"
+
   private def requiredEnv(name: String): String =
     sys.env.getOrElse(name, throw new IllegalArgumentException(s"Missing required env var: $name"))
 
@@ -43,7 +45,7 @@ class IhmQuestLaunchSimulation extends Simulation {
 
     if (ids.isEmpty) {
       session
-        .remove("selectedQuestId")
+        .set("selectedQuestId", MissingQuestId)
         .set("hasQuestToLaunch", false)
     } else {
       val selectedIndex = Random.nextInt(ids.size)
@@ -80,9 +82,7 @@ class IhmQuestLaunchSimulation extends Simulation {
       exec(listQuests)
         .exec(selectRandomQuest)
         .pause(thinkTimeMs.milliseconds)
-        .doIf(session => session("hasQuestToLaunch").asOption[Boolean].contains(true)) {
-          exec(launchQuest)
-        }
+        .exec(launchQuest)
         .pause(1.second)
     }
 
