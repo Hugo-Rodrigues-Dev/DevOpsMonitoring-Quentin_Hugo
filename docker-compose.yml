@@ -16,6 +16,7 @@ services:
       SPRING_PROFILES_ACTIVE: docker,${APP_MODE}
       OTEL_TRACES_EXPORTER_ENDPOINT: ${OTEL_TRACES_EXPORTER_ENDPOINT}
       OTEL_METRICS_EXPORTER_ENDPOINT: ${OTEL_METRICS_EXPORTER_ENDPOINT}
+      ROYAUME_PROFESSOR_FETCH_DELAY: ${ROYAUME_PROFESSOR_FETCH_DELAY}
       LOG_FILE: /app/logs/royaume-quests.json
     volumes:
       - app_logs:/app/logs
@@ -156,6 +157,7 @@ services:
       USERS: ${GATLING_USERS}
       DURATION_SECONDS: ${GATLING_DURATION_SECONDS}
       THINK_TIME_MS: ${GATLING_THINK_TIME_MS}
+      WARMUP_TIMEOUT_SECONDS: ${GATLING_WARMUP_TIMEOUT_SECONDS}
     volumes:
       - ./demo/demo-gatling/result:/opt/gatling/results
 

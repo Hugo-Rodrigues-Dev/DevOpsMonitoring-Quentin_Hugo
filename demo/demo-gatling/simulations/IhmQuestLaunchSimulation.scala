@@ -17,6 +17,7 @@ class IhmQuestLaunchSimulation extends Simulation {
   val users: Int = requiredInt("USERS")
   val durationSeconds: Int = requiredInt("DURATION_SECONDS")
   val thinkTimeMs: Int = requiredInt("THINK_TIME_MS")
+  val warmupTimeoutSeconds: Int = requiredInt("WARMUP_TIMEOUT_SECONDS")
 
   val httpProtocol = http
     .baseUrl(baseUrl)
@@ -63,7 +64,18 @@ class IhmQuestLaunchSimulation extends Simulation {
     }
   }
 
+  val waitForAvailableQuest = asLongAsDuring(
+    session => !session("hasQuestToLaunch").asOption[Boolean].contains(true),
+    warmupTimeoutSeconds.seconds
+  ) {
+    exec(listQuests)
+      .exec(selectRandomQuest)
+      .pause(1.second)
+  }
+
   val scn = scenario("Parcours IHM - lister et lancer une quete")
+    .exec(session => session.set("hasQuestToLaunch", false))
+    .exec(waitForAvailableQuest)
     .during(durationSeconds.seconds) {
       exec(listQuests)
         .exec(selectRandomQuest)

@@ -37,6 +37,7 @@ gatling-sample/
 |-- entrypoint.sh
 |-- simulations/                     # Simulations Scala
 |   |-- BasicSimulation.scala        # Smoke test de l'API des quetes
+|   |-- AutoQuestLaunchSimulation.scala # Simulation mode auto (autre binome)
 |   `-- IhmQuestLaunchSimulation.scala  # Scenario principal pour le mode IHM
 |-- docs/
 |   |-- RECORDER.md
@@ -53,6 +54,9 @@ docker compose --profile bench up --build
 ```
 
 Toutes les valeurs sont centralisees dans le `.env` racine.
+Il n'y a pas de fallback dans le `docker-compose.yml` : les variables attendues
+doivent etre presentes dans `.env`.
+
 Pour lancer le bench avec ce parametrage :
 
 ```bash
@@ -66,6 +70,7 @@ docker compose --profile bench up --build
 | Variable | Description |
 |---|---|
 | `APP_MODE` | Profil Spring applique a l'application |
+| `ROYAUME_PROFESSOR_FETCH_DELAY` | Frequence du scheduler de recuperation |
 | `POSTGRES_DB` | Nom de la base Postgres |
 | `POSTGRES_USER` | Utilisateur Postgres |
 | `POSTGRES_PASSWORD` | Mot de passe Postgres |
@@ -73,16 +78,11 @@ docker compose --profile bench up --build
 | `GATLING_API_URI` | Endpoint pour `BasicSimulation` |
 | `GATLING_QUESTS_BASE_PATH` | Endpoint base pour `IhmQuestLaunchSimulation` |
 | `GATLING_LAUNCH_DELAY_MS` | Delai envoye lors du lancement de quete |
-| `GATLING_SIMULATION_CLASS` | Classe Scala a executer |
+| `GATLING_SIMULATION_CLASS` | Classe Scala complete a executer |
 | `GATLING_USERS` | Nombre d'utilisateurs |
 | `GATLING_DURATION_SECONDS` | Duree (secondes) |
 | `GATLING_THINK_TIME_MS` | Pause utilisateur entre actions |
-
-```bash
-cd ../..
-cp .env.example .env
-# puis editer .env selon l'environnement cible
-```
+| `GATLING_WARMUP_TIMEOUT_SECONDS` | Temps max d'attente avant la charge utile |
 
 ---
 
@@ -102,6 +102,7 @@ rampUsers(N) during (D secondes)
 
 Scenario utilisateur principal pour le mode IHM.
 Chaque V-User :
+- attend au debut qu'au moins une quete soit visible via `/api/royaume/quests`
 - liste les quetes
 - selectionne une quete aleatoire
 - simule un temps de reflexion
