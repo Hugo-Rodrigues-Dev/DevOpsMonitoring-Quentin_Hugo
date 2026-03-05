@@ -9,13 +9,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import QuentinXHugo.demo.model.Quest;
 import QuentinXHugo.demo.model.QuestStatus;
+import java.util.List;
 
 @Repository
 public interface QuestRepository extends JpaRepository<Quest, String> {
 
-	java.util.List<Quest> findByStatusNot(QuestStatus status, org.springframework.data.domain.Sort sort);
+	List<Quest> findByStatusNot(QuestStatus status, org.springframework.data.domain.Sort sort);
 
-	java.util.List<Quest> findByStatus(QuestStatus status, org.springframework.data.domain.Sort sort);
+	List<Quest> findByStatus(QuestStatus status, org.springframework.data.domain.Sort sort);
 
 	@Modifying
 	@Transactional

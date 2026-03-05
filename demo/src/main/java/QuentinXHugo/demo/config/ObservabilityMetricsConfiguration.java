@@ -21,6 +21,8 @@ public class ObservabilityMetricsConfiguration {
 
 	@PostConstruct
 	public void registerQuestStatusGauges() {
+		// Expose une gauge par statut de quete pour afficher l'evolution des etats dans Grafana.
+		// Micrometer evalue repo.countByStatus(status) au moment du scrape Prometheus, donc la valeur reste alignee avec la base.
 		for (QuestStatus status : QuestStatus.values()) {
 			meterRegistry.gauge("quest_status_count", Tags.of("status", status.name()), questRepository,
 				repo -> repo.countByStatus(status));
