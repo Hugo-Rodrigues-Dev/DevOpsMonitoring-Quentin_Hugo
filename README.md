@@ -33,7 +33,7 @@ cp .env.example .env
 
 Variables principales :
 ```
-APP_MODE=auto            # ou ihm
+APP_MODE=auto # ou ihm
 ROYAUME_PROFESSOR_FETCH_DELAY=2s
 DEVONN_REGISTRY_USERNAME=Reader
 DEVONN_REGISTRY_PASSWORD=...
@@ -49,40 +49,26 @@ GATLING_WARMUP_TIMEOUT_SECONDS=30
 
 Commandes attendues :
 ```bash
-docker compose down -v
-docker compose up --build --pull --force-recreate -d
-```
-ou en une seule ligne :
-```bash
-docker compose down -v ; docker compose up --build --pull always --force-recreate -d
+docker compose down -v; APP_MODE=auto docker compose build --no-cache royaume-app; docker compose up
 ```
 
 ### Bench Gatling - commandes par cas
 
 1. Cas IHM nominal (attendu OK)
 ```bash
-APP_MODE=ihm docker compose up -d --build
-APP_MODE=ihm docker compose --profile bench-ihm up --build gatling-ihm
+docker compose down -v; APP_MODE=ihm  docker compose --profile bench-ihm build --no-cache royaume-app; docker compose --profile bench-ihm up
 ```
 
 2. Cas AUTO nominal (attendu OK)
 ```bash
-APP_MODE=auto docker compose up -d --build
-APP_MODE=auto docker compose --profile bench-auto up --build gatling-auto
+docker compose down -v; APP_MODE=auto docker compose --profile bench-auto build --no-cache royaume-app; docker compose --profile bench-auto up
 ```
 
 3. Cas de controle volontairement en erreur (attendu KO)
 ```bash
-APP_MODE=ihm docker compose --profile bench-auto up --build gatling-auto
+docker compose down -v; APP_MODE=ihm docker compose --profile bench-auto build --no-cache royaume-app; docker compose --profile bench-auto up
 ```
 Ce cas produit des erreurs par design: en mode `ihm`, l'API renvoie surtout des quetes `RECEIVED`, alors que la simulation `AutoQuestLaunchSimulation` exige des quetes `PROCESSING` et verifie explicitement cette condition.
-
-4. Ouvrir le dernier rapport (WSL/Windows)
-```bash
-ROOT="$(git rev-parse --show-toplevel)"
-LATEST="$(ls -t "$ROOT/demo/demo-gatling/result" | head -1)"
-explorer.exe "$(wslpath -w "$ROOT/demo/demo-gatling/result/$LATEST/index.html")"
-```
 
 Conteneurs démarrés :
 - `royaume-app` (Spring Boot + Actuator 8080/8090)
