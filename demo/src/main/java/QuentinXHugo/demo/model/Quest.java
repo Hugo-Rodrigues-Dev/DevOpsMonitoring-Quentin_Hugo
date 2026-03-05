@@ -22,12 +22,19 @@ public class Quest {
 	@Id
 	private String id;
 
+	@Column(length = 100)
 	private String kind;
+	@Column(length = 512)
 	private String titre;
+	@Column(columnDefinition = "TEXT")
 	private String description;
+	@Column(length = 512)
 	private String lieu;
+	@Column(length = 512)
 	private String ennemi;
+	@Column(length = 100)
 	private String priorite;
+	@Column(length = 100)
 	private String recompense;
 	@Convert(converter = DurationToLongConverter.class)
 	@Column(name = "duree_estimee_ms")
