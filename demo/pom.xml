@@ -118,4 +118,26 @@
 		</plugins>
 	</build>
 
+	<profiles>
+		<profile>
+			<id>native</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.graalvm.buildtools</groupId>
+						<artifactId>native-maven-plugin</artifactId>
+						<version>0.10.6</version>
+						<configuration>
+							<imageName>app</imageName>
+							<mainClass>QuentinXHugo.demo.QuentinXHugoApplication</mainClass>
+							<buildArgs>
+								<arg>--no-fallback</arg>
+							</buildArgs>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
 </project>

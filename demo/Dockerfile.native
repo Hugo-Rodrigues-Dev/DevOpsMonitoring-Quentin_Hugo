@@ -1,0 +1,22 @@
+FROM ghcr.io/graalvm/native-image-community:25 AS build
+ARG DEVONN_REGISTRY_USERNAME
+ARG DEVONN_REGISTRY_PASSWORD
+ENV DEVONN_REGISTRY_USERNAME=${DEVONN_REGISTRY_USERNAME}
+ENV DEVONN_REGISTRY_PASSWORD=${DEVONN_REGISTRY_PASSWORD}
+WORKDIR /workspace
+
+COPY mvnw mvnw
+COPY .mvn .mvn
+RUN mkdir -p /root/.m2
+COPY docker/maven-settings.xml /root/.m2/settings.xml
+COPY pom.xml pom.xml
+COPY src src
+
+RUN chmod +x mvnw && ./mvnw -q -Pnative -DskipTests native:compile
+
+FROM gcr.io/distroless/base-debian12:nonroot
+WORKDIR /app
+COPY --from=build /workspace/target/app /app/app
+
+EXPOSE 8080
+ENTRYPOINT ["/app/app"]

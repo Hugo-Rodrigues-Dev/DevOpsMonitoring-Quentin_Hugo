@@ -105,6 +105,23 @@ Ports utiles :
 - Kibana : `http://localhost:5601`
 - Jaeger UI : `http://localhost:16686`
 
+### Build natif GraalVM + image distroless
+
+Pre-requis local :
+- Java 25 GraalVM installe (pas un OpenJDK classique)
+- variable `JAVA_HOME` pointe vers GraalVM 25
+
+Compiler un binaire natif dans `target/app` :
+```bash
+cd demo
+./mvnw -Pnative -DskipTests native:compile
+```
+
+Construire l'image runtime distroless (sans shell/outils systeme) :
+```bash
+docker build -f demo/Dockerfile.native -t royaume-app:native ./demo
+```
+
 ### Kibana - Data View
 
 Pour afficher les logs Filebeat dans Kibana, la Data View doit utiliser ces valeurs :
