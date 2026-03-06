@@ -49,15 +49,15 @@ management:
           server:
             requests: 0.95,0.99
   tracing:
+    enabled: true
     sampling:
       probability: 1.0
-  otlp:
+  opentelemetry:
     tracing:
-      endpoint: ${OTEL_TRACES_EXPORTER_ENDPOINT}
-    metrics:
       export:
-        enabled: true
-        url: ${OTEL_METRICS_EXPORTER_ENDPOINT}
+        otlp:
+          endpoint: ${OTEL_TRACES_EXPORTER_ENDPOINT}
+          transport: http
 
 logging:
   file:

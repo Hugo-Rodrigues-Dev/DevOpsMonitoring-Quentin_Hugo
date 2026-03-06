@@ -8,22 +8,29 @@ processors:
   resource/service-name:
     attributes:
       - key: service.name
-        value: QuentinXHugo
+        value: observabilia-quentin-hugo
+        action: upsert
+      - key: service.namespace
+        value: observabilia
         action: upsert
   batch: {}
 
 exporters:
   logging:
     loglevel: info
-  otlphttp/jaeger:
-    endpoint: https://jaeger-http.devonn.io/
+  otlp/jaeger-local:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+  otlphttp/jaeger-prof:
+    endpoint: https://jaeger-http.devonn.io
 
 service:
   pipelines:
     traces:
       receivers: [otlp]
       processors: [resource/service-name, batch]
-      exporters: [logging, otlphttp/jaeger]
+      exporters: [logging, otlp/jaeger-local, otlphttp/jaeger-prof]
     metrics:
       receivers: [otlp]
       processors: [batch]
