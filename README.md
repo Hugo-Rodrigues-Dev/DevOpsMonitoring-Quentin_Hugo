@@ -12,6 +12,21 @@ Deux modes existent :
 
 ### En local (H2)
 
+Configurer d'abord l'acces Maven prive dans `~/.m2/settings.xml` :
+```xml
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+  <servers>
+    <server>
+      <id>devonn-registry</id>
+      <username>reader</username>
+      <password>TOKEN_DEVONN</password>
+    </server>
+  </servers>
+</settings>
+```
+
 Auto :
 ```bash
 cd demo
@@ -35,7 +50,7 @@ Variables principales :
 ```
 APP_MODE=auto # ou ihm
 ROYAUME_PROFESSOR_FETCH_DELAY=2s
-DEVONN_REGISTRY_USERNAME=Reader
+DEVONN_REGISTRY_USERNAME=reader
 DEVONN_REGISTRY_PASSWORD=...
 OTEL_TRACES_EXPORTER_ENDPOINT=http://otel-collector:4317
 OTEL_METRICS_EXPORTER_ENDPOINT=http://otel-collector:4318/v1/metrics
@@ -47,7 +62,11 @@ POSTGRES_PASSWORD=...
 GATLING_WARMUP_TIMEOUT_SECONDS=30
 ```
 
+`DEVONN_REGISTRY_USERNAME` et `DEVONN_REGISTRY_PASSWORD` doivent correspondre aux credentials du `~/.m2/settings.xml`.
+
 Commandes attendues :
+# Si vous êtes sur powershell, pensez à adapter les commandes (ex: ajouter $env: devant les variables d'environnement).
+
 ```bash
 docker compose down -v; APP_MODE=auto docker compose build --no-cache royaume-app; docker compose up
 ```
@@ -86,14 +105,13 @@ Ports utiles :
 - Kibana : `http://localhost:5601`
 - Jaeger UI : `http://localhost:16686`
 
-### Vérifier rapidement
+### Kibana - Data View
 
-Liste des quêtes (IHM consomme ces endpoints) :
-```bash
-curl --noproxy '*' http://localhost:8080/quests
-curl --noproxy '*' http://localhost:8080/api/quests
-curl --noproxy '*' http://localhost:8080/api/royaume/quests
-```
+Pour afficher les logs Filebeat dans Kibana, la Data View doit utiliser ces valeurs :
+- **Name** : `Royaume Quests`
+- **Index pattern** : `royaume-quests-*`
+
+En Docker Compose, cette Data View est créée automatiquement par le service `kibana-init`.
 
 Relancer une résolution manuelle :
 ```bash
