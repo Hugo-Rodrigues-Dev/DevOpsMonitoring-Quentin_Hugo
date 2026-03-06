@@ -5,22 +5,25 @@ receivers:
       http:
 
 processors:
+  resource/service-name:
+    attributes:
+      - key: service.name
+        value: QuentinXHugo
+        action: upsert
   batch: {}
 
 exporters:
   logging:
     loglevel: info
-  otlp/jaeger:
-    endpoint: jaeger:4317
-    tls:
-      insecure: true
+  otlphttp/jaeger:
+    endpoint: https://jaeger-http.devonn.io/
 
 service:
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [batch]
-      exporters: [logging, otlp/jaeger]
+      processors: [resource/service-name, batch]
+      exporters: [logging, otlphttp/jaeger]
     metrics:
       receivers: [otlp]
       processors: [batch]
